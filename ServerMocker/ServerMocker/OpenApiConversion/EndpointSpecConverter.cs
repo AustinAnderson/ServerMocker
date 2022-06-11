@@ -1,4 +1,6 @@
-﻿namespace ServerMocker.OpenApiConversion
+﻿using ServerMocker.Models;
+
+namespace ServerMocker.OpenApiConversion
 {
     public class EndpointSpecConverter
     {

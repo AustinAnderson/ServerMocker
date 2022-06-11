@@ -2,7 +2,7 @@
 using Newtonsoft.Json.Converters;
 using System.Text.RegularExpressions;
 
-namespace ServerMocker
+namespace ServerMocker.Models
 {
     public class QueryStringMap : Dictionary<string, SequenceOrResponse>, IValidatable
     {

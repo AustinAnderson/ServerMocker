@@ -2,7 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System.ComponentModel.DataAnnotations;
 
-namespace ServerMocker
+namespace ServerMocker.Models
 {
     public class SimpleEndpointResponse : AbstractEndpointResponseSpec
     {

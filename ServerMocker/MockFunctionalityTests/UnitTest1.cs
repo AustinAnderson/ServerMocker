@@ -10,7 +10,7 @@ namespace MockFunctionalityTests
         public void MockGET()
         {
             //EndpointSpecification
-            Program.Main(new[] {})
+            //Program.Main(new[] { });
 
         }
     }

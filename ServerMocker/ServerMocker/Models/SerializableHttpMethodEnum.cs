@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace ServerMocker
+namespace ServerMocker.Models
 {
     [JsonConverter(typeof(JsonSerializer))]
     public class SerializableHttpMethodEnum

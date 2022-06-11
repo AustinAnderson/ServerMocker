@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing.Patterns;
 using Newtonsoft.Json;
 using ServerMocker;
+using ServerMocker.Models;
 using ServerMocker.OpenApiConversion;
 
 public class Program 

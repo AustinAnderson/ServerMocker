@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
-namespace ServerMocker
+namespace ServerMocker.Models
 {
     /// <summary>
     /// defines a single endpoint, with behavior defined as either branching on query strings,

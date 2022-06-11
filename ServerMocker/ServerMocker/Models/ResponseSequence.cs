@@ -1,4 +1,4 @@
-﻿namespace ServerMocker
+﻿namespace ServerMocker.Models
 {
     public class ResponseSequence : List<MapOrResponse>, IValidatable
     {

@@ -2,7 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
 
-namespace ServerMocker
+namespace ServerMocker.Models
 {
     public class MapOrResponse:AbstractEndpointResponseSpec
     {
