@@ -56,7 +56,7 @@ namespace ServerMocker.Models
                 ValidateStatusCode(path);
             }
         }
-        public RequestDelegate ToRequestDelegate()
+        public RequestDelegate ToRequestDelegate(TextWriter outputWriter)
         {
 
             return new RequestDelegate(async httpCtx =>
@@ -71,28 +71,28 @@ namespace ServerMocker.Models
                 {
                     endpointResp=ByQueryString.MatchOrDefault(query).GetNext(query);
                 }
-                await WriteResponseFromSpec(httpCtx, endpointResp);
+                await WriteResponseFromSpec(httpCtx, endpointResp,outputWriter);
             });
         }
 
 
-        private async Task WriteResponseFromSpec(HttpContext ctx, AbstractEndpointResponseSpec spec)
+        private async Task WriteResponseFromSpec(HttpContext ctx, AbstractEndpointResponseSpec spec, TextWriter outputWriter)
         {
-            Console.Write(DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss.ffff tt") + ":   ");
-            Console.WriteLine(ctx.Request.Method + " " + ctx.Request.Path+ctx.Request.QueryString);
+            outputWriter.Write(DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss.ffff tt") + ":   ");
+            outputWriter.WriteLine(ctx.Request.Method + " " + ctx.Request.Path+ctx.Request.QueryString);
             var bodyStr=await new StreamReader(ctx.Request.Body).ReadToEndAsync();
             if (!string.IsNullOrWhiteSpace(bodyStr))
             {
-                Console.WriteLine(
+                outputWriter.WriteLine(
                     JsonConvert.DeserializeObject<JToken>(bodyStr)?.ToString()
                 );
             }
             if (spec.HasDelay)
             {
-                Console.Write($"Pausing {spec.DelayInSeconds}s... ");
+                outputWriter.Write($"Pausing {spec.DelayInSeconds}s... ");
                 await Task.Delay(TimeSpan.FromSeconds(spec.DelayInSeconds));
             }
-            Console.WriteLine("Returning "+spec.StatusCode);
+            outputWriter.WriteLine("Returning "+spec.StatusCode);
             if(spec.Headers != null && spec.Headers.Any())
             {
                 foreach(var header in spec.Headers)

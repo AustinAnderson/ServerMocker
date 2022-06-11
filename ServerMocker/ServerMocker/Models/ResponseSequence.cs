@@ -3,18 +3,9 @@
     public class ResponseSequence : List<MapOrResponse>, IValidatable
     {
         public const string Id = "$Sequence";
-        private static List<ResponseSequence> Sequences=new List<ResponseSequence>();
-        public ResponseSequence()
+        public void Reset()
         {
-            Sequences.Add(this);
-        }
-        public static void ResetSequences()
-        {
-            foreach(var sequence in Sequences)
-            {
-                sequence.current = 0;
-            }
-            Console.WriteLine("Sequences Reset");
+            current = 0;
         }
         private int current = 0;
         public AbstractEndpointResponseSpec GetNext(string queryString)

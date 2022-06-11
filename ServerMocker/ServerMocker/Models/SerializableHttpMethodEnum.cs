@@ -8,19 +8,25 @@ namespace ServerMocker.Models
     {
         public string Verb { get; private set; }
         private static readonly Dictionary<string,SerializableHttpMethodEnum> mapFromString = new Dictionary<string, SerializableHttpMethodEnum>();
-        public SerializableHttpMethodEnum(string method)
+        private static readonly Dictionary<HttpMethod, SerializableHttpMethodEnum> mapFrom = new Dictionary<HttpMethod, SerializableHttpMethodEnum>();
+        private static readonly Dictionary<SerializableHttpMethodEnum, HttpMethod> mapTo = new Dictionary<SerializableHttpMethodEnum, HttpMethod>();
+        public SerializableHttpMethodEnum(HttpMethod method)
         {
-            Verb = method;
-            mapFromString.Add(method.ToLower(), this);
+            Verb = method.Method;
+            mapFromString.Add(method.Method.ToLower(), this);
+            mapFrom.Add(method, this);
+            mapTo.Add(this,method);
         }
-        public static SerializableHttpMethodEnum Delete = new SerializableHttpMethodEnum(HttpMethods.Delete);
-        public static SerializableHttpMethodEnum Get = new SerializableHttpMethodEnum(HttpMethods.Get);
-        public static SerializableHttpMethodEnum Head = new SerializableHttpMethodEnum(HttpMethods.Head);
-        public static SerializableHttpMethodEnum Options = new SerializableHttpMethodEnum(HttpMethods.Options);
-        public static SerializableHttpMethodEnum Patch = new SerializableHttpMethodEnum(HttpMethods.Patch);
-        public static SerializableHttpMethodEnum Post = new SerializableHttpMethodEnum(HttpMethods.Post);
-        public static SerializableHttpMethodEnum Put = new SerializableHttpMethodEnum(HttpMethods.Put);
-        public static SerializableHttpMethodEnum Trace = new SerializableHttpMethodEnum(HttpMethods.Trace);
+        public static implicit operator HttpMethod(SerializableHttpMethodEnum val)=>mapTo[val];
+        public static explicit operator SerializableHttpMethodEnum(HttpMethod val)=>mapFrom[val];
+        public static SerializableHttpMethodEnum Delete = new SerializableHttpMethodEnum(HttpMethod.Delete);
+        public static SerializableHttpMethodEnum Get = new SerializableHttpMethodEnum(HttpMethod.Get);
+        public static SerializableHttpMethodEnum Head = new SerializableHttpMethodEnum(HttpMethod.Head);
+        public static SerializableHttpMethodEnum Options = new SerializableHttpMethodEnum(HttpMethod.Options);
+        public static SerializableHttpMethodEnum Patch = new SerializableHttpMethodEnum(HttpMethod.Patch);
+        public static SerializableHttpMethodEnum Post = new SerializableHttpMethodEnum(HttpMethod.Post);
+        public static SerializableHttpMethodEnum Put = new SerializableHttpMethodEnum(HttpMethod.Put);
+        public static SerializableHttpMethodEnum Trace = new SerializableHttpMethodEnum(HttpMethod.Trace);
 
         public class JsonSerializer : JsonConverter
         {
