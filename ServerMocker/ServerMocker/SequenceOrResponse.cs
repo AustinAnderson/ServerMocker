@@ -17,7 +17,7 @@ namespace ServerMocker
                 return Sequence.GetNext(queryString);
             }
         }
-        [JsonProperty("$Seq")]
+        [JsonProperty(ResponseSequence.Id)]
         public ResponseSequence? Sequence { get; set; }
 
         public override void Validate(string path)
@@ -26,13 +26,13 @@ namespace ServerMocker
             if(populateds!=null && Sequence != null)
             {
                 throw new JsonSerializationException(
-                    populateds + " are set; simple response and $Seq are mutual exclusive",
+                    populateds + $" are set; simple response and {ResponseSequence.Id} are mutual exclusive",
                     path,0,0,null
                 );
             }
             if(Sequence != null)
             {
-                Sequence.Validate($"{path}.$Seq");
+                Sequence.Validate($"{path}.{ResponseSequence.Id}");
             }
             else
             {

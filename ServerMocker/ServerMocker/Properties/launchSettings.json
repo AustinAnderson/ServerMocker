@@ -1,4 +1,4 @@
-﻿{
+{
   "iisSettings": {
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
@@ -10,12 +10,13 @@
   "profiles": {
     "ServerMocker": {
       "commandName": "Project",
-      "dotnetRunMessages": true,
+      "commandLineArgs": "mock endpoints.json --http --port=5390",
       "launchBrowser": true,
-      "applicationUrl": "https://localhost:7120;http://localhost:5120",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "applicationUrl": "https://localhost:7120;http://localhost:5120",
+      "dotnetRunMessages": true
     },
     "IIS Express": {
       "commandName": "IISExpress",

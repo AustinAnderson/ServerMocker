@@ -7,7 +7,7 @@ namespace ServerMocker
     public class MapOrResponse:AbstractEndpointResponseSpec
     {
 
-        [JsonProperty("$QueryMap")]
+        [JsonProperty(QueryStringMap.Id)]
         public QueryStringMap? ByQueryString { get; set; }
 
         public override void Validate(string path)
@@ -15,11 +15,11 @@ namespace ServerMocker
             var populateds = GetPopulatedSimpleResponseComponents();
             if(populateds != null && ByQueryString != null)
             {
-                throw new JsonSerializationException(populateds + " are set, simple requests and $QueryMap are mutually exclusive for this section");
+                throw new JsonSerializationException(populateds + $" are set, simple requests and {QueryStringMap.Id} are mutually exclusive for this section");
             }
             if(ByQueryString != null)
             {
-                ByQueryString.Validate(path+".$QueryMap");
+                ByQueryString.Validate(path+"."+QueryStringMap.Id);
             }
             else
             {

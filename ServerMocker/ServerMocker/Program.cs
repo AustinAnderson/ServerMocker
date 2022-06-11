@@ -16,12 +16,30 @@ if(args[0] == "help")
 }
 if(args[0] == "mock")
 {
-    if(args.Length != 2)
+    int? port = null;
+    if(args.Where(x=>!x.StartsWith("--")).Count() != 2)
     {
         PrintUsage();
         return;
     }
-    await RunMocker(args[1]);
+    var portArg = args.FirstOrDefault(x => x.StartsWith("--port="));
+    if (portArg != null)
+    {
+        var split = portArg.Split("=");
+        if (split.Length != 2)
+        {
+            PrintUsage();
+            return;
+        }
+        if (!int.TryParse(split[1], out int portVal))
+        {
+            Console.Error.WriteLine($"invalid port '{split[1]}', port must be an int");
+            PrintUsage();
+            return;
+        }
+        port = portVal;
+    }
+    await RunMocker(args[1],port,args.Contains("--http"));
     return;
 }
 if(args[0] == "gen")
@@ -77,44 +95,84 @@ static async Task<string> ProcessOpenApiToEndpointSpecFile(string openApiJson)
     await File.WriteAllTextAsync(output.FullName,JsonConvert.SerializeObject(spec,Formatting.Indented));
     return output.FullName;
 }
-static async Task RunMocker(string specPath) 
+static async Task RunMocker(string specPath,int? port,bool useHttp) 
 {
+
     FileInfo specFile = new FileInfo( specPath );
-    if (!specFile.Exists)
+    try
     {
-        throw new FileNotFoundException(specPath);
-    }
-    var specs = JsonConvert.DeserializeObject<EndpointSpecification[]>(
-        await File.ReadAllTextAsync(specPath)
-    );
-    if (specs == null)
-    {
-        throw new ArgumentException("spec file " + specPath + " parsed to null");
-    }
-    for(int i = 0; i < specs.Length; i++)
-    {
-        specs[i].Validate("["+i+"]");
-    }
-    var builder = WebApplication.CreateBuilder(new string[] {});
-    var app = builder.Build();
-    app.UseEndpoints(endpoints => {
-        foreach (var endpoint in specs)
+        if (!specFile.Exists)
         {
-            endpoints.MapMethods(
-                endpoint.ApiRoute,
-                new[] { endpoint.Method.Verb },
-                endpoint.ToRequestDelegate()
-            );
+            Console.Error.WriteLine($"spec file not found: '{specPath}'");
+            return;
         }
-    });
-    await app.RunAsync();
+        var specs = JsonConvert.DeserializeObject<EndpointSpecification[]>(
+            await File.ReadAllTextAsync(specPath),
+            new JsonSerializerSettings
+            {
+                MissingMemberHandling = MissingMemberHandling.Error
+            }
+        );
+        if (specs == null)
+        {
+            Console.Error.WriteLine("spec file " + specPath + " parsed to null");
+            return;
+        }
+        for (int i = 0; i < specs.Length; i++)
+        {
+            specs[i].Validate("[" + i + "]");
+        }
+    
+        var builder = WebApplication.CreateBuilder(new string[] { });
+        builder.Services.AddHostedService<KeyCommandService>();
+        builder.Services.AddSingleton(p =>
+        {
+            var lifeTime=p.GetRequiredService<IHostApplicationLifetime>();
+            return new Dictionary<char, KeyCommand>
+            {
+                ['r']= new KeyCommand
+                {
+                    CommandDescription = $"reset all {ResponseSequence.Id} state",
+                    KeyAction = () => ResponseSequence.ResetSequences()
+                },
+                ['q']= new KeyCommand
+                {
+                    CommandDescription = $"quit the app",
+                    KeyAction = () => lifeTime.StopApplication()
+                }
+            };
+        });
+        var app = builder.Build();
+        app.Urls.Add((useHttp?"http":"https")+"://localhost:" + (port ?? 5001));
+        app.UseRouting();
+        app.UseEndpoints(endpoints =>
+        {
+            foreach (var endpoint in specs)
+            {
+                endpoints.MapMethods(
+                    endpoint.ApiRoute,
+                    new[] { endpoint.Method.Verb },
+                    endpoint.ToRequestDelegate()
+                );
+            }
+        });
+        await app.RunAsync();
+    }
+    catch(JsonSerializationException ex)
+    {
+        //if(ex.Message.Contains(""))
+        Console.Error.WriteLine($"Endpoints file {specFile.Name} is invalid ");
+        Console.Error.WriteLine("at path "+ex.Path);
+        Console.Error.WriteLine(ex.Message);
+    }
 }
 static void PrintUsage()
 {
     Console.WriteLine("dotnet run ServerMocker mock|gen|help <args>");
     Console.WriteLine();
-    Console.WriteLine("mock <mock specification file path>");
+    Console.WriteLine("mock <mock specification file path> [--port=<number>] [--http]");
     Console.WriteLine("    Starts the server mocker with the provided conf");
+    Console.WriteLine("    defaults to https on port 5001");
     Console.WriteLine("gen <url to GET OpenAPI 3 specification>");
     Console.WriteLine("    outputs a server mocker configuration file to ./endpoints.json");
     Console.WriteLine("    generated from the OpenApi specification downloaded from the endpoint");

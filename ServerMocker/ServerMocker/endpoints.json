@@ -1,0 +1,104 @@
+[
+  {
+    "ApiRoute": "/",
+    "Method": "GET",
+    "StatusCode": 200,
+    "Body": "ServerMocker is up"
+  },
+  {
+    "ApiRoute": "test/mock",
+    "Method": "GET",
+    "DelayInSeconds": 2.1,
+    "StatusCode": 200,
+    "Body": [
+      {
+        "hi": 1,
+        "bye": 2
+      }
+    ]
+  },
+  {
+    "ApiRoute": "test/mock",
+    "Method": "Patch",
+    "StatusCode": 200,
+    "Body": 23
+  },
+  {
+    "ApiRoute": "test/mock/sequence",
+    "Method": "POST",
+    "$Sequence": [
+      {
+        "StatusCode": 504,
+        "Body": "test retry on flaky gateway"
+      },
+      {
+        "StatusCode": 200,
+        "Body": {
+          "someThingBody": "kjdfjk"
+        }
+      }
+    ]
+  },
+  {
+    "ApiRoute": "test/mock/map",
+    "Method": "GET",
+    "$QueryMap": {
+      "$Default": {
+        "StatusCode": 200,
+        "Body": "default"
+      },
+      ".*mode=single.*": {
+        "StatusCode": 200,
+        "Body": "fixed"
+      },
+      ".*mode=seq.*": {
+        "$Sequence": [
+          {
+            "StatusCode": 504,
+            "Body": "first"
+          },
+          {
+            "StatusCode": 200,
+            "Body": {
+              "Status": "good"
+            }
+          },
+          {
+            //i.e. test/mock/map?mode=seq&otherkey=opt1
+            //after test/mock/map?mode=seq called twice
+            "$QueryMap": {
+              "$Default": {
+                "StatusCode": 200,
+                "Body": "defaultSequenceMap"
+              },
+              ".*otherKey=opt1.*": {
+                "StatusCode": 200,
+                "Body": {
+                  "Status": "opt1"
+                }
+              },
+              ".*otherKey=opt2.*": {
+                "StatusCode": 200,
+                "Body": {
+                  "Status": "opt2"
+                }
+              },
+              ".*otherKey=seq.*": {
+                "$Sequence": [
+                  {
+                    "StatusCode": 200,
+                    "Body": "otherKey first"
+                  },
+                  {
+                    "StatusCode": 200,
+                    "Body":  "otherKey second"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+]

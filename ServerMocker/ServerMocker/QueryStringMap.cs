@@ -1,15 +1,17 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System.Text.RegularExpressions;
 
 namespace ServerMocker
 {
-    public class QueryStringMap : Dictionary<Regex, SequenceOrResponse>, IValidatable
+    public class QueryStringMap : Dictionary<string, SequenceOrResponse>, IValidatable
     {
+        public const string Id = "$QueryMap";
         public SequenceOrResponse MatchOrDefault(string toMatch)
         {
             foreach(var kvp in this)
             {
-                if (kvp.Key.IsMatch(toMatch))
+                if (Regex.IsMatch(toMatch,kvp.Key))
                 {
                     return kvp.Value;
                 }

@@ -19,9 +19,9 @@ namespace ServerMocker
         public SerializableHttpMethodEnum Method { get; set; }
 #pragma warning restore CS8618 // handled via attribute
 
-        [JsonProperty("$Seq")]
+        [JsonProperty(ResponseSequence.Id)]
         public ResponseSequence? Sequence { get; set; }
-        [JsonProperty("$QueryMap")]
+        [JsonProperty(QueryStringMap.Id)]
         public QueryStringMap? ByQueryString { get; set; }
 
         public override void Validate(string path)
@@ -32,11 +32,11 @@ namespace ServerMocker
             bool isMap = ByQueryString != null;
             var errorMessage = (isSimple, isSequence, isMap) switch
             {
-                (false, false, false) => "Either status code for simple response, $Seq, or $QueryMap must be set",
-                (false, true, true) => "$Seq and $QueryMap are mutually exclusive",
-                (true, false, true) => populateds+" are set; simple response and $QueryMap are mutually exclusive",
-                (true, true, false) => populateds+" are set; simple response and $Seq are mutually exclusive",
-                (true, true, true) => populateds+" are set; simple response, $Seq, and $QueryMap are mutually exclusive",
+                (false, false, false) => $"Either status code for simple response, {ResponseSequence.Id}, or {QueryStringMap.Id} must be set",
+                (false, true, true) => $"{ResponseSequence.Id} and {QueryStringMap.Id} are mutually exclusive",
+                (true, false, true) => populateds+$" and {QueryStringMap.Id} are set; simple response and {QueryStringMap.Id} are mutually exclusive",
+                (true, true, false) => populateds+$" and {ResponseSequence.Id} are set; simple response and {ResponseSequence.Id} are mutually exclusive",
+                (true, true, true) => populateds+$", {QueryStringMap.Id}, and {ResponseSequence.Id} are set; simple response, {ResponseSequence.Id}, and {QueryStringMap.Id} are mutually exclusive",
                 _ => null
             };
             if (errorMessage != null)
@@ -45,11 +45,11 @@ namespace ServerMocker
             }
             if (ByQueryString != null)
             {
-                ByQueryString.Validate($"{path}.$QueryMap");
+                ByQueryString.Validate($"{path}.{QueryStringMap.Id}");
             }
             else if(Sequence != null)
             {
-                Sequence.Validate($"{path}.$Seq");
+                Sequence.Validate($"{path}.{ResponseSequence.Id}");
             }
             else
             {
@@ -78,7 +78,21 @@ namespace ServerMocker
 
         private async Task WriteResponseFromSpec(HttpContext ctx, AbstractEndpointResponseSpec spec)
         {
-            await Task.Delay(TimeSpan.FromSeconds(spec.DelayInSeconds));
+            Console.Write(DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss.ffff tt") + ":   ");
+            Console.WriteLine(ctx.Request.Method + " " + ctx.Request.Path+ctx.Request.QueryString);
+            var bodyStr=await new StreamReader(ctx.Request.Body).ReadToEndAsync();
+            if (!string.IsNullOrWhiteSpace(bodyStr))
+            {
+                Console.WriteLine(
+                    JsonConvert.DeserializeObject<JToken>(bodyStr)?.ToString()
+                );
+            }
+            if (spec.HasDelay)
+            {
+                Console.Write($"Pausing {spec.DelayInSeconds}s... ");
+                await Task.Delay(TimeSpan.FromSeconds(spec.DelayInSeconds));
+            }
+            Console.WriteLine("Returning "+spec.StatusCode);
             if(spec.Headers != null && spec.Headers.Any())
             {
                 foreach(var header in spec.Headers)
@@ -89,7 +103,7 @@ namespace ServerMocker
                     }
                 }
             }
-            ctx.Response.StatusCode = (int)spec.StatusCode;
+            ctx.Response.StatusCode = spec.StatusCode;
             if (spec.Body != null)
             {
                 await ctx.Response.WriteAsync(spec.Body.ToString());

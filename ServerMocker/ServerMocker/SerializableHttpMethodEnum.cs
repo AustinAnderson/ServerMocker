@@ -27,7 +27,7 @@ namespace ServerMocker
             public override bool CanConvert(Type objectType) => typeof(SerializableHttpMethodEnum) == objectType;
             public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, Newtonsoft.Json.JsonSerializer serializer)
             {
-                var str=reader.ReadAsString()?.ToLower()??"(was C# null)";
+                var str=reader.Value?.ToString()?.ToLower()??"(was C# null)";
                 if(!mapFromString.TryGetValue(str,out var value))
                 {
                     throw new JsonSerializationException($"Invalid HttpMethod '{str}'");
